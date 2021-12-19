@@ -24,7 +24,7 @@ export const fixture = async (): Promise<TestContext> => {
 
   // Can only run on mainnet. Uses real swap addresses
   const harvestooor = <Harvestooor>await deploy("Harvestooor", deployer, [
-    "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // sand exchange
+    "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45", // Uni exchange (v2 and v3)
     "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F", // Sushi exchange
   ]);
 

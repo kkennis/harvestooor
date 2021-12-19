@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "./interfaces/ISwapRouter.sol";
 
-import "hardhat/console.sol";
-
 contract Harvestooor {
     using SafeERC20 for IERC20;
 
@@ -42,13 +40,10 @@ contract Harvestooor {
     ) external {
         // Withdraw token
         harvestToken.safeTransferFrom(msg.sender, address(this), amount);
-
-        console.log("WITHDREW TOKENS");
+        harvestToken.approve(address(uniEx), amount);
 
         // Swap one way - 0 return acceptable because second swap min is enforced
         uint256 amountIntermediate = swapV2(address(harvestToken), address(exchangeToken), amount, 0, address(this));
-
-        console.log("SWAPPED HALFWAY");
 
         // Approve the exchange token
         exchangeToken.approve(address(uniEx), amountIntermediate);
@@ -80,6 +75,7 @@ contract Harvestooor {
     ) external {
         // Withdraw token
         harvestToken.safeTransferFrom(msg.sender, address(this), amount);
+        harvestToken.approve(address(uniEx), amount);
 
         // Swap one way - 0 return acceptable because second swap min is enforced
         uint256 amountIntermediate = swapV3(
@@ -119,6 +115,7 @@ contract Harvestooor {
     ) external {
         // Withdraw token
         harvestToken.safeTransferFrom(msg.sender, address(this), amount);
+        harvestToken.approve(address(sushiEx), amount);
 
         // Swap one way - 0 return acceptable because second swap min is enforced
         uint256 amountIntermediate = swapSushi(address(harvestToken), address(exchangeToken), amount, 0, address(this));
@@ -149,8 +146,6 @@ contract Harvestooor {
         uint256 minReturn,
         address recipient
     ) internal returns (uint256) {
-        console.log("SWAPPING V2");
-
         address[] memory path = new address[](2);
         path[0] = from;
         path[1] = to;
@@ -180,16 +175,17 @@ contract Harvestooor {
         uint256 feeTier,
         address recipient
     ) internal returns (uint256) {
-        bytes memory path = abi.encodePacked(from, feeTier, to);
-
-        IV3SwapRouter.ExactInputParams memory params = IV3SwapRouter.ExactInputParams({
-            path: path,
+        IV3SwapRouter.ExactInputSingleParams memory params = IV3SwapRouter.ExactInputSingleParams({
+            tokenIn: from,
+            tokenOut: to,
+            fee: uint24(feeTier),
             recipient: recipient,
             amountIn: amount,
-            amountOutMinimum: minReturn
+            amountOutMinimum: minReturn,
+            sqrtPriceLimitX96: 0
         });
 
-        uint256 amountOut = uniEx.exactInput(params);
+        uint256 amountOut = uniEx.exactInputSingle(params);
 
         return amountOut;
     }
